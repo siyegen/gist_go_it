@@ -54,20 +54,14 @@ func GetGist(url, key string) *GistResponse {
 
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
-	if err != nil {
-		log.Fatalf("Error with get %s", err)
-	}
+	ExitIfErr("Error with http.Get", err)
 
 	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalf("Error with get %s", err)
-	}
+	ExitIfErr("Error reading body", err)
 
 	var gist_resp GHResponse
 	err = json.Unmarshal(body, &gist_resp)
-	if err != nil {
-		log.Fatalf("Error with get %s", err)
-	}
+	ExitIfErr("Error unmarshalling json", err)
 
 	return gist_resp.Files["remind_todo"]
 }
@@ -95,4 +89,10 @@ func GetEnvOrExit(name string) string {
 		log.Fatalf("%s was empty!", name)
 	}
 	return value
+}
+
+func ExitIfErr(message string, err error) {
+	if err != nil {
+		log.Fatalf("message %s", err)
+	}
 }
