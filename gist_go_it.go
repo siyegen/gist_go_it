@@ -24,29 +24,27 @@ type GistResponse struct {
 
 type GistFiles map[string]*GistResponse
 
-type XXResponse struct {
+type GHResponse struct {
 	Files GistFiles
 }
 
 func main() {
-	// sg_user := GetEnvOrExit("SG_USER")
-	// sg_key := GetEnvOrExit("SG_KEY")
+	sgUser := GetEnvOrExit("SG_USER")
+	sgKey := GetEnvOrExit("SG_KEY")
+	ghGist := GetEnvOrExit("GH_GIST")
+	ghKey := GetEnvOrExit("GH_KEY")
 
-	// message := &EmailMessage{
-	// 	ToAddr:   "siyegen@gmail.com",
-	// 	FromAddr: "siyegen@gmail.com",
-	// 	Subject:  "Testing Testing",
-	// 	Text:     "Just some go",
-	// }
+	url := fmt.Sprintf("https://api.github.com/gists/%s", ghGist)
+	gist := GetGist(url, ghKey)
 
-	// SendEmail(message, sg_user, sg_key)
+	message := &EmailMessage{
+		ToAddr:   "siyegen@gmail.com",
+		FromAddr: "siyegen@gmail.com",
+		Subject:  gist.Filename,
+		Text:     gist.Content,
+	}
 
-	// gh_user := GetEnvOrExit("GH_USER")
-	gh_gist := GetEnvOrExit("GH_GIST")
-	gh_key := GetEnvOrExit("GH_KEY")
-
-	url := fmt.Sprintf("https://api.github.com/gists/%s", gh_gist)
-	fmt.Println(GetGist(url, gh_key))
+	SendEmail(message, sgUser, sgKey)
 }
 
 func GetGist(url, key string) *GistResponse {
@@ -65,7 +63,7 @@ func GetGist(url, key string) *GistResponse {
 		log.Fatalf("Error with get %s", err)
 	}
 
-	var gist_resp XXResponse
+	var gist_resp GHResponse
 	err = json.Unmarshal(body, &gist_resp)
 	if err != nil {
 		log.Fatalf("Error with get %s", err)
@@ -74,8 +72,8 @@ func GetGist(url, key string) *GistResponse {
 	return gist_resp.Files["remind_todo"]
 }
 
-func SendEmail(sgmessage *EmailMessage, sg_user, sg_key string) {
-	sg := sendgrid.NewSendGridClient(sg_user, sg_key)
+func SendEmail(sgmessage *EmailMessage, sgUser, sgKey string) {
+	sg := sendgrid.NewSendGridClient(sgUser, sgKey)
 	message := sendgrid.NewMail()
 	message.AddTo(sgmessage.ToAddr)
 	message.AddSubject(sgmessage.Subject)
