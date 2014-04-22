@@ -8,6 +8,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"schedule"
+	"syscall"
 )
 
 type EmailMessage struct {
@@ -29,8 +32,8 @@ type GHResponse struct {
 }
 
 func main() {
-	sgUser := GetEnvOrExit("SG_USER")
-	sgKey := GetEnvOrExit("SG_KEY")
+	// sgUser := GetEnvOrExit("SG_USER")
+	// sgKey := GetEnvOrExit("SG_KEY")
 	ghGist := GetEnvOrExit("GH_GIST")
 	ghKey := GetEnvOrExit("GH_KEY")
 
@@ -44,7 +47,38 @@ func main() {
 		Text:     gist.Content,
 	}
 
-	SendEmail(message, sgUser, sgKey)
+	log.Println(message)
+	// SendEmail(message, sgUser, sgKey)
+	scheduler := schedule.NewScheduler(3)
+
+	log.Println("Scheduler!!", scheduler)
+	go func() {
+		log.Println("Woo")
+		err := scheduler.Run()
+		fmt.Println(err)
+	}()
+
+	// takes GH Key, GH Gist id, email, scheduleFormat
+	// emailMeGist := &NewGistReminder()
+	//  takes message, email, scheduleFormat
+	emailMeHello := &schedule.BasicReminder{
+		Email:   "siyegen@gmail.com",
+		Name:    "Hello test!",
+		Content: "Listen to Ulrich Schnauss",
+	}
+
+	// // Takes a job
+	numberJobs, _ := scheduler.AddJob(emailMeHello)
+	fmt.Println("Len?", numberJobs)
+
+	sigChan := make(chan os.Signal)
+	signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
+
+	select {
+	case sig := <-sigChan:
+		log.Println("Received signal", sig)
+	}
+
 }
 
 func GetGist(url, key string) *GistResponse {
